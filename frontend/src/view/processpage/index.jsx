@@ -19,7 +19,7 @@ export const ProcessPage = () => {
   return (
     <div className="main">
       <div className="loader"></div>
-      <Typography variant="h3" component="h3" sx={{ mt: 3, mb: 3, fontFamily:"cursive" }}>
+      <Typography variant="h3" component="h3" sx={{ mt: 3, mb: 3, fontFamily:"Droid Sans" }}>
         Running Simulation ...
       </Typography>
     </div>

@@ -1,5 +1,9 @@
+import { Button } from "@mui/material";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
+import EditIcon from "@mui/icons-material/Edit";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import { useState } from "react";
 import { useLocation } from "react-router-dom";
 import {
   LineChart,
@@ -10,6 +14,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
+import ModelOne from "./model1";
 
 export const ResultPage = () => {
   const location = useLocation();
@@ -75,6 +80,8 @@ export const ResultPage = () => {
     return qboth;
   };
 
+  const [open, setOpen] = useState(false);
+
   return (
     <Box
       sx={{
@@ -89,10 +96,51 @@ export const ResultPage = () => {
       <Typography
         variant="h3"
         component="h3"
-        sx={{ mt: 3, mb: 3, fontFamily: "cursive" }}
+        sx={{ mt: 3, mb: 0.5, fontFamily: "Droid Sans" }}
       >
         Simulation Results
       </Typography>
+
+      <Box
+        sx={{
+          width: "100%",
+          height: "100%",
+          display: "flex",
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <Button
+          variant="contained"
+          color="grey"
+          sx={{
+            textTransform: "none",
+            fontSize: "large",
+            fontFamily: "Droid Sans",
+            mr: 2,
+          }}
+          startIcon={<ArrowBackIcon />}
+          onClick={() => window.location.href = "/"}
+        >
+          Re-Select Model
+        </Button>
+        <Button
+          variant="contained"
+          color="grey"
+          sx={{
+            textTransform: "none",
+            fontSize: "large",
+            fontFamily: "Droid Sans",
+          }}
+          startIcon={<EditIcon />}
+          onClick={() => setOpen(true)}
+        >
+          Edit Parameters
+        </Button>
+      </Box>
+
+      <ModelOne open={open} setOpen={setOpen} />
       <Box
         sx={{
           width: "100%",
@@ -117,7 +165,7 @@ export const ResultPage = () => {
           <Typography
             variant="h3"
             component="h3"
-            sx={{ mt: 3, mb: 3, fontFamily: "cursive", fontSize: "1.2rem" }}
+            sx={{ mt: 3, mb: 3, fontFamily: "Droid Sans", fontSize: "1.2rem" }}
           >
             Station 1
           </Typography>
@@ -153,7 +201,7 @@ export const ResultPage = () => {
           <Typography
             variant="h3"
             component="h3"
-            sx={{ mt: 3, mb: 3, fontFamily: "cursive", fontSize: "1.2rem" }}
+            sx={{ mt: 3, mb: 3, fontFamily: "Droid Sans", fontSize: "1.2rem" }}
           >
             Station 2
           </Typography>
@@ -190,7 +238,7 @@ export const ResultPage = () => {
         <Typography
           variant="h3"
           component="h3"
-          sx={{ mt: 3, mb: 3, fontFamily: "cursive", fontSize: "1.2rem" }}
+          sx={{ mt: 3, mb: 3, fontFamily: "Droid Sans", fontSize: "1.2rem" }}
         >
           Station Both
         </Typography>
