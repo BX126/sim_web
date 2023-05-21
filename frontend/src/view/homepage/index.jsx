@@ -3,10 +3,12 @@ import Typography from "@mui/material/Typography";
 import { Button } from "@mui/material";
 import { useState } from "react";
 import ModelOne from "./model1";
+import ModelTwo from "./model2";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 
 export const HomePage = () => {
-  const [open, setOpen] = useState(false);
+  const [open_1, setOpen_1] = useState(false);
+  const [open_2, setOpen_2] = useState(false);
 
   return (
     <Box
@@ -45,7 +47,7 @@ export const HomePage = () => {
 
       <Button
         variant="outlined"
-        onClick={() => setOpen(true)}
+        onClick={() => setOpen_1(true)}
         sx={{
           mb: 18,
           color: "black",
@@ -68,7 +70,8 @@ export const HomePage = () => {
         </Typography>
       </Button>
 
-      <ModelOne open={open} setOpen={setOpen} />
+      <ModelOne open={open_1} setOpen={setOpen_1} />
+      <ModelTwo open={open_2} setOpen={setOpen_2} />
 
       <Typography
           variant="h4"
@@ -88,7 +91,7 @@ export const HomePage = () => {
 
       <Button
         variant="outlined"
-        onClick={() => setOpen(true)}
+        onClick={() => setOpen_2(true)}
         sx={{
           mt:2,
           color: "black",
