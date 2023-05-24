@@ -5,11 +5,8 @@ const getResults = async (payload) => {
 };
 
 const runSimulation = async (data) => {
-  if (data.years === undefined) {
-    return post("/run", { data: data });
-  } else {
-    return post("/runs", { data: data });
-  }
+  return post("/run", { data: data });
+ 
 };
 
 const apis = {

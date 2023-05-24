@@ -1,128 +1,95 @@
 from simulation_traced_based import SimulationModel
-import copy
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
+import json
 
-_init_ = "runner"
+__init__ = "runner"
 
-def run_simulation(year_to_run=8):
-    lambda_path = "/Volumes/CHRI-data/Code/Antonio/ForSimulation/ArrivalDay_and_Races.xlsx"
-    mu_path = "/Volumes/CHRI-data/Code/Antonio/ForSimulation/logNormalParametes.csv"
+
+def run_simulation(repeat_times, directory):
+    name = directory.split("/")[-3]
+    year_to_run = 10
+    lambda_path = directory + "sim_arrival_dates.csv"
     n = 2000
     concurrency = 1
     delta = 1
     Nc = 100000
-    model = SimulationModel(year_to_run, lambda_path, mu_path, n, concurrency, delta, Nc)
-    model_copy = copy.deepcopy(model)
-    repeat_times = 100
-    num_classes = 4
+    black_x = directory + "los_ecdf_black_x.pkl"
+    white_x = directory + "los_ecdf_white_x.pkl"
+    hispanic_x = directory + "los_ecdf_hispanic_x.pkl"
+    other_x = directory + "los_ecdf_x.pkl"
     result = []
+    in_sys_rate_white = directory + "in_sys_rate_white.pkl"
+    in_sys_rate_african = directory + "in_sys_rate_african.pkl"
+    in_sys_rate_hispanic = directory + "in_sys_rate_hispanic.pkl"
+    in_sys_rate_other = directory + "in_sys_rate_other.pkl"
 
     for i in range(repeat_times):
-        model_copy.run()
-        result.append(model_copy.track_q)
-        model_copy = copy.deepcopy(model)
+        print("Running simulation " + str(i + 1) + " times")
+        model = SimulationModel(year_to_run, lambda_path, n, concurrency, delta, Nc, black_x, white_x,
+                                hispanic_x, other_x, in_sys_rate_white, in_sys_rate_african, in_sys_rate_hispanic, in_sys_rate_other, repeat_times)
+        model.run()
+        result.append(model.track_q)
 
     maximum = []
     for i in range(len(result)):
         maximum.append(np.max(result[i], axis=0).tolist())
 
-    df = pd.DataFrame(maximum, columns=['num', 'white', 'african', 'hispanic', 'asian'])
+    df = pd.DataFrame(maximum, columns=[
+                      'num', 'white', 'african', 'hispanic', 'other'])
     min_max = df["num"].min()
 
     white_census = []
     african_census = []
     hispanic_census = []
-    asian_census = []
+    other_census = []
     for i in range(len(result)):
-        temp = pd.DataFrame(result[i][:min_max], columns=['num', 'white', 'african', 'hispanic', 'asian'])
+        temp = pd.DataFrame(result[i][:min_max], columns=[
+                            'num', 'white', 'african', 'hispanic', 'other'])
         white_census.append(week_mean(temp["white"].tolist()))
         african_census.append(week_mean(temp["african"].tolist()))
         hispanic_census.append(week_mean(temp["hispanic"].tolist()))
-        asian_census.append(week_mean(temp["asian"].tolist()))
+        other_census.append(week_mean(temp["other"].tolist()))
 
     avg_white = np.mean(white_census, axis=0).tolist()
     avg_african = np.mean(african_census, axis=0).tolist()
     avg_hispanic = np.mean(hispanic_census, axis=0).tolist()
-    avg_asian = np.mean(asian_census, axis=0).tolist()
+    avg_other = np.mean(other_census, axis=0).tolist()
 
     sim_data = pd.DataFrame()
     sim_data["class1"] = avg_white
     sim_data["class2"] = avg_african
     sim_data["class3"] = avg_hispanic
-    sim_data["class4"] = avg_asian
-    return sim_data
+    sim_data["class4"] = avg_other
+    real_data = read_real_data(directory)
+    r1, d1 = unify(real_data["class1"].tolist(), sim_data["class1"].tolist())
+    r2, d2 = unify(real_data["class2"].tolist(), sim_data["class2"].tolist())
+    r3, d3 = unify(real_data["class3"].tolist(), sim_data["class3"].tolist())
+    r4, d4 = unify(real_data["class4"].tolist(), sim_data["class4"].tolist())
+    out = json.dumps({"name":name,"white_sim": d1, "white_real": r1, "african_sim": d2, "african_real": r2,
+                     "hispanic_sim": d3, "hispanic_real": r3, "other_sim": d4, "other_real": r4})
+    return out
 
 
-def plotting(df, real_data):
-    plt.figure(4)
-    plt.plot([x for x in range(len(real_data["class4"].tolist()))], real_data["class4"].tolist(), label='Other Census Real')
-    plt.plot([x for x in range(len(df["class4"].tolist()))], df["class4"].tolist(), label='Other Census Simulation')
-    plt.plot([x for x in range(len(df["class4"].tolist()))],
-             df["class4"].tolist() - 1.975 * np.sqrt(df["class4"].tolist()),
-             label='Other Census Simulation - 5% Confidence Interval')
-    plt.plot([x for x in range(len(df["class4"].tolist()))],
-             df["class4"].tolist() + 1.975 * np.sqrt(df["class4"].tolist()),
-             label='Other American Census Simulation - 95% Confidence Interval')
-    plt.savefig('class4.png')
-    plt.legend()
-
-    plt.figure(3)
-    plt.plot([x for x in range(len(df["class1"].tolist()))], df["class1"].tolist(), label='White Census Simulation')
-    plt.plot([x for x in range(len(real_data["class1"].tolist()))], real_data["class1"].tolist(), label='White Census Real')
-    plt.plot([x for x in range(len(df["class1"].tolist()))],
-             df["class1"].tolist() - 1.975 * np.sqrt(df["class1"].tolist()),
-             label='White Census Simulation - 5% Confidence Interval')
-    plt.plot([x for x in range(len(df["class1"].tolist()))],
-             df["class1"].tolist() + 1.975 * np.sqrt(df["class1"].tolist()),
-             label='White Census Simulation - 95% Confidence Interval')
-    # plt.fill_between([x for x in range(len(df["class1"].tolist()))], df["class1"].tolist() - 1.96 * np.sqrt(df["class1"].tolist()),
-    #                  df["class1"].tolist() + 1.96 * np.sqrt(df["class1"].tolist()), alpha=0.2)
-    plt.savefig('class1.png')
-    plt.legend()
-
-    plt.figure(2)
-    plt.plot([x for x in range(len(df["class2"].tolist()))], df["class2"].tolist(),
-             label='African American Census Simulation')
-    plt.plot([x for x in range(len(real_data["class2"].tolist()))], real_data["class2"].tolist(),
-                label='African American Census Real')
-    plt.plot([x for x in range(len(df["class2"].tolist()))],
-             df["class2"].tolist() - 1.975 * np.sqrt(df["class2"].tolist()),
-             label='African American Census Simulation - 5% Confidence Interval')
-    plt.plot([x for x in range(len(df["class2"].tolist()))],
-             df["class2"].tolist() + 1.975 * np.sqrt(df["class2"].tolist()),
-             label='African American Census Simulation - 95% Confidence Interval')
-    plt.savefig('class2.png')
-    plt.legend()
-
-    plt.figure(1)
-    plt.plot([x for x in range(len(df["class3"].tolist()))], df["class3"].tolist(),
-             label='Hispanic Census Simulation')
-    plt.plot([x for x in range(len(real_data["class3"].tolist()))], real_data["class3"].tolist(),
-                label='Hispanic Census Real')
-    plt.plot([x for x in range(len(df["class3"].tolist()))],
-             df["class3"].tolist() - 1.975 * np.sqrt(df["class3"].tolist()),
-             label='African American Census Simulation - 5% Confidence Interval')
-    plt.plot([x for x in range(len(df["class2"].tolist()))],
-             df["class3"].tolist() + 1.975 * np.sqrt(df["class3"].tolist()),
-             label='African American Census Simulation - 95% Confidence Interval')
-    plt.savefig('class3.png')
-    plt.legend()
-
-    plt.show()
+def unify(list1, list2):
+    if len(list1) > len(list2):
+        list1 = list1[:len(list2)]
+    else:
+        list2 = list2[:len(list1)]
+    return list1, list2
 
 
-def read_real_data():
-    white = pd.read_csv("/Users/bx/PycharmProjects/simulation/real_data/white_real_data.csv", header=None)[1].values.tolist()
-    african = pd.read_csv("/Users/bx/PycharmProjects/simulation/real_data/AA_real_data.csv", header=None)[1].values.tolist()
-    hispanic = pd.read_csv("/Users/bx/PycharmProjects/simulation/real_data/H_real_data.csv", header=None)[1].values.tolist()
-    asian = pd.read_csv("/Users/bx/PycharmProjects/simulation/real_data/O_real_data.csv", header=None)[1].values.tolist()
+def read_real_data(directory):
+    data = pd.read_csv(directory + "real_census.csv")
+    white = data["Census_60"].tolist()
+    african = data["Census_10"].tolist()
+    hispanic = data["Census_40"].tolist()
+    others = data["OtherCensus"].tolist()
     df = pd.DataFrame()
     df["class1"] = white
     df["class2"] = african
     df["class3"] = hispanic
-    df["class4"] = asian
+    df["class4"] = others
     return df
 
 
@@ -133,7 +100,3 @@ def week_mean(lt):
     return mean
 
 
-if __name__ == '__main__':
-    sim = run_simulation()
-    real = read_real_data()
-    plotting(sim, real)
