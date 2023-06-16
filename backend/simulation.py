@@ -3,7 +3,7 @@ import pandas as pd
 import heapq
 import pickle
 
-__init__ = "simulation_model"
+__init__ = "simulation"
 
 
 class SimulationModel:

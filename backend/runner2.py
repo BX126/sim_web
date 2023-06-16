@@ -1,13 +1,13 @@
-from simulation import SimulationModel
+from simulation_2 import SimulationModel2
 import numpy as np
 import pandas as pd
 import json
 from itertools import zip_longest
 
-__init__ = "runner"
+__init__ = "runner2"
 
 
-def run_simulation(repeat_times, directory):
+def run_simulation2(repeat_times, directory, black, white, hispanic, other):
     name = directory.split("/")[-3]
     year_to_run = 10
     lambda_path = directory + "sim_arrival_dates.csv"
@@ -15,10 +15,10 @@ def run_simulation(repeat_times, directory):
     concurrency = 1
     delta = 1
     Nc = 100000
-    black_x = directory + "los_ecdf_black_x.pkl"
-    white_x = directory + "los_ecdf_white_x.pkl"
-    hispanic_x = directory + "los_ecdf_hispanic_x.pkl"
-    other_x = directory + "los_ecdf_x.pkl"
+    black_x = float(black)
+    white_x = float(white)
+    hispanic_x = float(hispanic)
+    other_x = float(other)
     result = []
     in_sys_rate_white = directory + "in_sys_rate_white.pkl"
     in_sys_rate_african = directory + "in_sys_rate_african.pkl"
@@ -27,7 +27,7 @@ def run_simulation(repeat_times, directory):
 
     for i in range(repeat_times):
         print("Running simulation " + str(i + 1) + " times")
-        model = SimulationModel(year_to_run, lambda_path, n, concurrency, delta, Nc, black_x, white_x,
+        model = SimulationModel2(year_to_run, lambda_path, n, concurrency, delta, Nc, black_x, white_x,
                                 hispanic_x, other_x, in_sys_rate_white, in_sys_rate_african, in_sys_rate_hispanic,
                                 in_sys_rate_other, repeat_times)
         model.run()
@@ -113,16 +113,13 @@ def unify(list1, list2, list3, list4):
         list4 = list4[:len(list1)]
     return list1, list2, list3, list4
 
-
 def read_real_data(directory):
     data = pd.read_csv(directory + "real_census.csv")
     white = data["Census_60"].tolist()
     african = data["Census_10"].tolist()
     hispanic = data["Census_40"].tolist()
     others = data["OtherCensus"].tolist()
-    total = np.add(white, african).tolist()
-    total = np.add(total, hispanic).tolist()
-    total = np.add(total, others).tolist()
+    total = [a + b + c + d for a, b, c, d in zip(white, african, hispanic, others)]
     df = pd.DataFrame()
     df["class1"] = white
     df["class2"] = african

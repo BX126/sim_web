@@ -5,12 +5,53 @@ import DialogContent from '@mui/material/DialogContent';
 import Box from "@mui/material/Box";
 import Slider from '@mui/material/Slider';
 import Typography from "@mui/material/Typography";
-import { useState } from "react";
+import TextField from '@mui/material/TextField';
+import FormGroup from "@mui/material/FormGroup";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import Radio from '@mui/material/Radio';
+import RadioGroup from '@mui/material/RadioGroup';
+import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 
 const Param = ({ open, setOpen, county }) => {
 
-  const [repeatTimes, setRepeatTimes] = useState(100);
+
+  const [repeatTimes, setRepeatTimes] = useState(50);
+  const [traced, setTraced] = useState(false);
+  const af = useRef(0);
+  const other = useRef(0);
+  const hispanic = useRef(0);
+  const white = useRef(0);
+  const los = {
+    "COOK": {
+      "white": 462.31,
+      "af": 496.52,
+      "hispanic": 465.76,
+      "other": 373.00
+    },
+    "DUPAGE": {
+      "white": 595.28,
+      "af": 660.36,
+      "hispanic": 595.93,
+      "other": 830.00
+    },
+    "WILL": {
+      "white": 462.31,
+      "af": 496.52,
+      "hispanic": 465.76,
+      "other": 373.00
+    },
+    "PEORIA": {
+      "white": 576.00,
+      "af": 657.72,
+      "hispanic": 504.50,
+      "other": 913.00
+    }
+  }
+
+  const handleTraced = () => {
+    setTraced(!traced);
+  };
 
   const handleChange = (event, newValue) => {
     setRepeatTimes(newValue);
@@ -19,15 +60,20 @@ const Param = ({ open, setOpen, county }) => {
   const navigate = useNavigate();
   const runSimulation = () => {
     const data = {
+      traced: traced,
       times: repeatTimes,
-      county: county
+      county: county,
+      white: white.current.value,
+      af: af.current.value,
+      hispanic: hispanic.current.value,
+      other: other.current.value,
     };
     navigate("./process", { state: { data } });
   };
 
   const handleClose = () => {
     setOpen(false);
-    setRepeatTimes(100);
+    setTraced(false);
   };
 
   return (
@@ -40,14 +86,22 @@ const Param = ({ open, setOpen, county }) => {
               alignItems: "center",
               flexDirection: "column",
               justifyContent: "center",
-              height: 150,
-              width: 350,
+              height: traced ? 400 : 200,
+              width: 400,
             }}
           >
             <Typography
-              variant="h5"
-              component="h5"
-              sx={{ fontFamily: "Droid Sans", mb: 2 }}
+              variant="h6"
+              component="h6"
+              sx={{ mb: 3, color: "rgb(128, 128, 128)", fontSize: "large", fontWeight: "bold" }}
+            >
+              Simulation Parameters
+            </Typography>
+
+            <Typography
+              variant="h6"
+              component="h6"
+              sx={{ mb: 1, color: "rgb(128, 128, 128)", fontSize: "medium" }}
             >
               Repeat Times
             </Typography>
@@ -57,12 +111,12 @@ const Param = ({ open, setOpen, county }) => {
               onChange={handleChange}
               valueLabelDisplay="auto"
               getAriaValueText={(value) => `${value}`}
-              min={100}
+              min={50}
               max={3000}
               marks={[
                 {
-                  value: 100,
-                  label: '100',
+                  value: 50,
+                  label: '50',
                 },
                 {
                   value: 3000,
@@ -70,6 +124,7 @@ const Param = ({ open, setOpen, county }) => {
                 },
               ]}
               sx={{
+                width: "80%",
                 color: 'green',
                 '& .MuiSlider-thumb': {
                   color: '#69b3a2',
@@ -83,11 +138,98 @@ const Param = ({ open, setOpen, county }) => {
               }}
             />
 
+            <Typography
+              variant="h6"
+              component="h6"
+              sx={{ mb: 1, color: "rgb(128, 128, 128)", fontSize: "medium" }}
+            >
+              Length of Stay
+            </Typography>
+
+            <FormGroup>
+              <RadioGroup
+                row
+                aria-labelledby="demo-row-radio-buttons-group-label"
+                name="row-radio-buttons-group"
+                defaultValue="Emerpical Distri."
+                onChange={handleTraced}
+              >
+                <FormControlLabel value="Emerpical Distri." control={<Radio sx={{
+                  color: "#69b3a2", '&.Mui-checked': {
+                    color: "#69b3a2",
+                  }
+                }} />} label="~Emerpical Distri." sx={{ mb: 1, color: "rgb(128, 128, 128)", fontSize: "medium" }} />
+                <FormControlLabel value="Exponential Distri." control={<Radio sx={{
+                  color: "#69b3a2", '&.Mui-checked': {
+                    color: "#69b3a2",
+                  }
+                }} />} label="~Exponential Distri." sx={{ mb: 1, color: "rgb(128, 128, 128)", fontSize: "medium" }} />
+              </RadioGroup>
+            </FormGroup>
+
+            {traced && (
+              <Box
+                sx={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: " center" }}>
+                <Typography variant="h6" component="h6" sx={{ mb: 0, color: "rgb(128, 128, 128)", fontSize: "small" }}>
+                  λ
+                </Typography>
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    flexDirection: "row",
+                    justifyContent: "center",
+                  }}
+                >
+                  <TextField
+                    sx={{ width: "50%", m: 1 }}
+                    label="White"
+                    defaultValue={los[county]["white"]}
+                    inputRef={white}
+                  />
+
+                  <TextField
+                    sx={{ width: "50%", m: 1 }}
+                    label="African American"
+                    defaultValue={los[county]["af"]}
+                    inputRef={af}
+                  />
+                </Box>
+
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    flexDirection: "row",
+                    justifyContent: "center",
+                  }}
+                >
+
+                  <TextField
+                    sx={{ width: "50%", m: 1 }}
+                    label="Hispanic"
+                    defaultValue={los[county]["hispanic"]}
+                    inputRef={hispanic}
+                  />
+
+                  <TextField
+                    sx={{ width: "50%", m: 1 }}
+                    label="Other"
+                    defaultValue={los[county]["other"]}
+                    inputRef={other}
+                  />
+
+                </Box>
+              </Box>
+            )}
+
+
+
           </Box>
         </DialogContent>
-        <DialogActions>
-          <Button variant="contained" onClick={runSimulation} sx={{ textTransform: "none", fontSize: "large" }}>Run Simulation</Button>
-          <Button variant="contained" onClick={handleClose} sx={{ textTransform: "none", fontSize: "large" }}>Cancel</Button>
+        <DialogActions sx={{ display: 'flex', justifyContent: "center" }}>
+          <Button variant="contained" onClick={runSimulation} sx={{ textTransform: "none", fontSize: "large", backgroundColor: '#69b3a2', ':hover': { backgroundColor: 'green' } }}>Run Simulation</Button>
+          <Button variant="contained" onClick={handleClose} sx={{ textTransform: "none", fontSize: "large", backgroundColor: '#69b3a2', ':hover': { backgroundColor: 'green' } }}>Cancel</Button>
         </DialogActions>
       </Dialog>
     </div >

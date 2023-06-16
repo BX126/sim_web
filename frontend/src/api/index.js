@@ -9,9 +9,15 @@ const runSimulation = async (data) => {
  
 };
 
+const runSimulation2 = async (data) => {
+  return post("/run2", { data: data });
+ 
+};
+
 const apis = {
   getResults,
   runSimulation,
+  runSimulation2,
 };
 
 export default apis;
